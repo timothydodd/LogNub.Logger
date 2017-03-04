@@ -8,6 +8,7 @@ namespace LogNub.Logger
 {
     public class LogEntry
     {
+        public string ApiKey { get; set; }
         public string Type { get; set; }
         public string Machine { get; set; }
         public string Category { get; set; }

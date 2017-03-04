@@ -29,7 +29,7 @@ namespace LogNub.Logger
             if (readable)
                 builder.Append("\n");
             Type t = o.GetType();
-            var fields = t.GetFields();
+            var fields = t.GetProperties();
             for (int index = 0; index < fields.Length; index++)
             {
                 var o2 = fields[index];
@@ -58,7 +58,7 @@ namespace LogNub.Logger
                 else
                 {
 
-                    if (o2.FieldType.IsValueType || value is string)
+                    if (o2.PropertyType.IsValueType || value is string)
                     {
                         builder.Append(string.Format("\"{0}\"", value).Replace("\\", "_").Replace(Environment.NewLine, "\n"));
 

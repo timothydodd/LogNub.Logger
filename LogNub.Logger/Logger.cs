@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using LogNub.Logger.Properties;
+
 
 namespace LogNub.Logger
 {
@@ -17,7 +17,8 @@ namespace LogNub.Logger
         public string Machine { get; }
         public string Category { get; }
         private BackgroundWorker _worker = new BackgroundWorker();
-
+        private string _webServiceURL =  "http://www.lognub.com";
+        public string WebServiceURL { get { return _webServiceURL; } set { _webServiceURL = value; } }
         public Logger(string apiKey,string machine, string category)
         {
             ApiKey = apiKey;
@@ -44,6 +45,7 @@ namespace LogNub.Logger
 
                     entry = _queue.Dequeue();
                 }
+                entry.ApiKey = ApiKey;
                 SendLogEntry(entry);
 
                 lock (_queue)
@@ -90,7 +92,7 @@ namespace LogNub.Logger
             try
             {
 
-                string baseAddress = Settings.Default.WebServiceURL;
+                string baseAddress = WebServiceURL;
 
                 string serviceURL = string.Format("{0}/Log/Write", baseAddress);
                 HttpWebRequest req = (HttpWebRequest) HttpWebRequest.Create(serviceURL);
@@ -100,7 +102,6 @@ namespace LogNub.Logger
 
                 var body = SmallSerializer.Wrap("value", SmallSerializer.SerializeObject(entry, false));
                 byte[] reqBodyBytes = Encoding.UTF8.GetBytes(body);
-                Console.WriteLine("Sent payload:{0} bytes", body.Length);
                 using (Stream postStream = req.GetRequestStream())
                 {
                     using (var zipStream = new GZipStream(postStream, CompressionMode.Compress))
@@ -113,7 +114,7 @@ namespace LogNub.Logger
                 {
                     if (resp.ContentLength > 0)
                     {
-                        Console.WriteLine(new StreamReader(resp.GetResponseStream()).ReadToEnd());
+                       var  txt =new StreamReader(resp.GetResponseStream()).ReadToEnd();
                     }
                     resp.Close();
                 }
