@@ -1,0 +1,4 @@
+[submodule "SqlUtils"]
+	path = SqlUtils
+	url = https://github.com/timothydodd/SQLUtilities
+	branch = master

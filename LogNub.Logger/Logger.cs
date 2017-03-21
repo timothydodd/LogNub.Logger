@@ -20,11 +20,14 @@ namespace LogNub.Logger
         private BackgroundWorker _worker = new BackgroundWorker();
         private string _webServiceURL =  "http://www.lognub.com";
         public string WebServiceURL { get { return _webServiceURL; } set { _webServiceURL = value; } }
-        public Logger(string apiKey,string machine, string application)
+        public bool IsAsync { get { return _isAsync; } set { _isAsync = value; } }
+        private bool _isAsync = true;
+        public Logger(string apiKey,string machine,string application, string category)
         {
             ApiKey = apiKey;
             this.Machine = machine;
-            this.Category = application;
+            this.Application = application;
+            this.Category = category;
             _worker.DoWork += _worker_DoWork;
         }
 
@@ -46,7 +49,7 @@ namespace LogNub.Logger
 
                     entry = _queue.Dequeue();
                 }
-                entry.ApiKey = ApiKey;
+      
                 SendLogEntry(entry);
 
                 lock (_queue)
@@ -66,15 +69,23 @@ namespace LogNub.Logger
             logEntry.Date = DateTime.UtcNow;
             logEntry.Message = message;
             logEntry.Machine = machine;
-
-            lock (_queue)
+            logEntry.ApiKey = ApiKey;
+            if (IsAsync)
             {
-                _queue.Enqueue(logEntry);
+                lock (_queue)
+                {
+                    _queue.Enqueue(logEntry);
 
+                }
+                if (!_worker.IsBusy)
+                {
+                    _worker.RunWorkerAsync();
+                }
             }
-            if (!_worker.IsBusy)
+            else
             {
-                _worker.RunWorkerAsync();
+                SendLogEntry(logEntry);
+
             }
         }
         public void Write(string type, string message)
