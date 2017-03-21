@@ -15,15 +15,16 @@ namespace LogNub.Logger
     {
         public string ApiKey { get; }
         public string Machine { get; }
+        public string Application { get; }
         public string Category { get; }
         private BackgroundWorker _worker = new BackgroundWorker();
         private string _webServiceURL =  "http://www.lognub.com";
         public string WebServiceURL { get { return _webServiceURL; } set { _webServiceURL = value; } }
-        public Logger(string apiKey,string machine, string category)
+        public Logger(string apiKey,string machine, string application)
         {
             ApiKey = apiKey;
             this.Machine = machine;
-            this.Category = category;
+            this.Category = application;
             _worker.DoWork += _worker_DoWork;
         }
 
@@ -56,14 +57,16 @@ namespace LogNub.Logger
             }
         }
 
-        public void Write(string type, string machine, string category, string message)
+        public void Write(string type, string machine,string app, string category, string message)
         {
             var logEntry = GetLogEntry();
             logEntry.Type = type;
+            logEntry.Application = app;
             logEntry.Category = category;
             logEntry.Date = DateTime.UtcNow;
             logEntry.Message = message;
             logEntry.Machine = machine;
+
             lock (_queue)
             {
                 _queue.Enqueue(logEntry);
@@ -76,15 +79,15 @@ namespace LogNub.Logger
         }
         public void Write(string type, string message)
         {
-            Write(type, Machine, Category, message);
+            Write(type, Machine,Application, Category, message);
         }
         public void Write( string message)
         {
-            Write(LogEntryType.Event.ToString(), Machine, Category, message);
+            Write(LogEntryType.Event.ToString(), Machine, Application, Category, message);
         }
         public void Write(Exception exception)
         {
-            Write(LogEntryType.Error.ToString(), Machine, Category, exception.ToString());
+            Write(LogEntryType.Error.ToString(), Machine, Application, Category, exception.ToString());
         }
 
         private void SendLogEntry(LogEntry entry)
@@ -95,7 +98,7 @@ namespace LogNub.Logger
                 string baseAddress = WebServiceURL;
 
                 string serviceURL = string.Format("{0}/Log/Write", baseAddress);
-                HttpWebRequest req = (HttpWebRequest) HttpWebRequest.Create(serviceURL);
+                HttpWebRequest req = (HttpWebRequest) WebRequest.Create(serviceURL);
                 req.Method = "POST";
                 req.ContentType = "application/json";
                 req.Headers.Add("Content-Encoding", "gzip");
