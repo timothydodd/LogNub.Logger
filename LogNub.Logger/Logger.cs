@@ -28,6 +28,7 @@ namespace LogNub.Logger
             this.Machine = machine;
             this.Application = application;
             this.Category = category;
+            _worker.WorkerSupportsCancellation = true;
             _worker.DoWork += _worker_DoWork;
         }
 
@@ -158,6 +159,17 @@ namespace LogNub.Logger
         }
         private Queue<LogEntry> _queue = new Queue<LogEntry>();
         private Stack<LogEntry> _pool = new Stack<LogEntry>();
+
+        public void Stop()
+        {
+            try
+            {
+                _worker.CancelAsync();
+            }
+            catch (Exception e)
+            {
+            }
+        }
     }
 
     public enum LogEntryType
